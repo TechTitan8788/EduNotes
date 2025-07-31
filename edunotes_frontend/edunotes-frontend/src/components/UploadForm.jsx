@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 
 function UploadForm() {
@@ -10,6 +11,8 @@ function UploadForm() {
     pdf_file: null,
   });
 
+  const [message, setMessage] = useState("");
+
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === "file") {
@@ -21,9 +24,35 @@ function UploadForm() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData); // We'll replace this with Axios later
+
+    const data = new FormData();
+    data.append("title", formData.title);
+    data.append("subject", formData.subject); // subject = Subject ID
+    data.append("year", formData.year); // Just storing for frontend logic
+    data.append("tags", formData.tags);
+    data.append("is_paid", formData.is_paid);
+    data.append("pdf_file", formData.pdf_file);
+
+    try {
+      const res = await axios.post(
+        "http://127.0.0.1:8000/api/upload-note/",
+        data,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            // Uncomment this after adding JWT later:
+            // 'Authorization': `Bearer ${token}`
+          },
+        }
+      );
+      console.log(res.data);
+      setMessage("✅ Note uploaded successfully!");
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+      setMessage("❌ Upload failed. Check console for details.");
+    }
   };
 
   return (
@@ -99,6 +128,12 @@ function UploadForm() {
       >
         Upload Note
       </button>
+
+      {message && (
+        <div className="text-center mt-4 font-medium text-green-600">
+          {message}
+        </div>
+      )}
     </form>
   );
 }
